@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Marker Tracking Lab — Built From Scratch</title>
+<meta name="description" content="An original from-scratch build of a marker-tracking lab: ArUco fiducial detection, camera calibration and motion-capture frame alignment published over ROS." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --accent:#0891b2; --accent-soft:#e0f4f9; --ink:#16201f; --muted:#5d6b69;
+    --line:#dfe5e3; --bg:#fbfcfb; --card:#ffffff;
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 28px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:.1em .4em;border-radius:4px;color:#0e7490}
+  h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.15;letter-spacing:-.01em}
+  /* Header */
+  header.hero{padding:88px 0 56px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 22px}
+  h1{font-size:clamp(2.6rem,6vw,4.1rem);margin:0 0 18px}
+  .lede{font-size:1.22rem;color:var(--muted);max-width:62ch;margin:0 0 28px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.82rem}
+  .chip{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);background:var(--card)}
+  /* Sections */
+  section{padding:54px 0;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h2{font-size:clamp(1.7rem,3.4vw,2.3rem);margin:0 0 20px}
+  h3{font-size:1.2rem;margin:0 0 6px}
+  p{margin:0 0 18px;max-width:68ch}
+  .muted{color:var(--muted)}
+  /* Stack grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px}
+  .tool{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .tool .t{font-family:var(--mono);font-size:.78rem;color:var(--accent);letter-spacing:.04em;margin-bottom:8px}
+  .tool h3{font-size:1.05rem;font-family:var(--sans);font-weight:600;margin-bottom:6px}
+  .tool p{font-size:.92rem;color:var(--muted);margin:0}
+  /* Pipeline / modules */
+  ol.flow{counter-reset:s;list-style:none;padding:0;margin:24px 0 0}
+  ol.flow li{position:relative;padding:18px 0 18px 56px;border-top:1px solid var(--line)}
+  ol.flow li:before{counter-increment:s;content:counter(s,decimal-leading-zero);position:absolute;left:0;top:18px;font-family:var(--mono);font-size:.8rem;color:var(--accent);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;background:var(--card)}
+  ol.flow li h3{font-family:var(--sans);font-size:1.02rem;font-weight:600;margin:0 0 4px}
+  ol.flow li p{margin:0;font-size:.93rem;color:var(--muted)}
+  .tag{display:inline-block;font-family:var(--mono);font-size:.68rem;padding:2px 7px;border-radius:5px;margin-left:8px;vertical-align:middle}
+  .tag.on{background:#e6f7ec;color:#1c7a43}
+  .tag.off{background:#fdecea;color:#b23b2c}
+  /* Callout */
+  .callout{background:var(--accent-soft);border:1px solid #bce6ee;border-radius:14px;padding:24px 26px;margin-top:8px}
+  .callout p:last-child{margin:0}
+  /* Reflection list */
+  ul.learn{list-style:none;padding:0;margin:8px 0 0}
+  ul.learn li{padding:14px 0 14px 30px;border-top:1px solid var(--line);position:relative;color:var(--muted);max-width:68ch}
+  ul.learn li:before{content:"→";position:absolute;left:0;color:var(--accent);font-family:var(--mono)}
+  ul.learn li b{color:var(--ink);font-weight:600}
+  /* Footer */
+  footer{padding:48px 0 80px}
+  .credit{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .credit .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  footer .fine{font-size:.8rem;color:var(--muted);margin-top:22px;text-align:center}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">From-Scratch Build · Computer Vision</p>
+    <h1>Marker Tracking Lab</h1>
+    <p class="lede">A vision pipeline that spots printed fiducial markers in a camera feed, works out exactly where each one sits in 3D, and lines that up with a motion-capture system's world frame — so a robot, a camera and a tracker all agree on where things are. Built from scratch to learn how machines locate objects in a shared space.</p>
+    <div class="meta">
+      <span class="chip">Python</span><span class="chip">OpenCV</span><span class="chip">ArUco</span>
+      <span class="chip">ROS</span><span class="chip">Motion capture</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">What it is</p>
+    <h2>Where is that thing, exactly?</h2>
+    <p>The lab's job is <b>pose estimation</b>: given a video frame, find each printed marker, and report not just where it is on screen but its full position and orientation in metres. Those poses are published as transforms so they can be drawn in a 3D viewer and consumed by anything else on the robotics bus.</p>
+    <p>The second half is the part I most wanted to build: <b>frame alignment</b>. A camera sees the world from its own viewpoint; a motion-capture rig has its own origin. To make them cooperate, the camera frame has to be expressed in the tracker's coordinates. Once aligned, a marker detected by the camera and a robot tracked by motion capture live in the same map.</p>
+    <div class="callout">
+      <p><b>The core idea I wanted to learn:</b> a fiducial marker is a cheap, reliable anchor. Because its size and pattern are known, one camera image is enough to recover a full 3D pose — and once you can express that pose in a shared world frame, separate sensing systems suddenly speak the same language.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">The stack</p>
+    <h2>Tools under the hood</h2>
+    <p class="muted">This rebuild sits at the meeting point of optics, computer vision and robotics plumbing. Here is what each piece does.</p>
+    <div class="grid">
+      <div class="tool"><div class="t">capture</div><h3>Industrial camera</h3><p>A machine-vision camera driver delivers a steady, high-resolution image stream into the pipeline.</p></div>
+      <div class="tool"><div class="t">vision</div><h3>OpenCV ArUco</h3><p>Detects fiducial markers and, with the camera's intrinsics, solves each marker's 3D pose from a single frame.</p></div>
+      <div class="tool"><div class="t">calibration</div><h3>Camera calibration</h3><p>The camera matrix and distortion coefficients that turn raw pixels into accurate, undistorted measurements.</p></div>
+      <div class="tool"><div class="t">middleware</div><h3>ROS + TF</h3><p>Poses are published on the transform tree so every node shares one consistent picture of where things are.</p></div>
+      <div class="tool"><div class="t">ground truth</div><h3>Motion capture</h3><p>A tracker provides the authoritative world frame that the camera is aligned to.</p></div>
+      <div class="tool"><div class="t">visualisation</div><h3>3D viewer</h3><p>A robotics visualiser draws markers, frames and the camera live, so alignment errors are obvious at a glance.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Architecture</p>
+    <h2>Three nodes, one map</h2>
+    <p>The lab runs as a few independent ROS nodes you bring up in order. Keeping them separate means you can debug the camera without touching detection, or detection without the tracker.</p>
+    <ol class="flow">
+      <li><h3>Camera node <span class="tag on">live</span></h3><p>Starts the machine-vision camera and exposes its rectified image stream to the rest of the graph.</p></li>
+      <li><h3>Calibration <span class="tag on">live</span></h3><p>Feeds the camera matrix and distortion coefficients in, so measurements are metrically accurate.</p></li>
+      <li><h3>Marker detection <span class="tag on">live</span></h3><p>Finds allowed markers in the rectified feed and publishes their poses to the transform tree.</p></li>
+      <li><h3>Tracker client <span class="tag on">live</span></h3><p>Brings in the motion-capture world frame and the poses it reports.</p></li>
+      <li><h3>Frame alignment <span class="tag on">live</span></h3><p>A static transform that expresses the camera in the tracker's coordinates, fusing both worlds.</p></li>
+      <li><h3>Web bridge <span class="tag on">live</span></h3><p>A bridge server so the live data can be reached from outside the robotics graph.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">How it runs</p>
+    <h2>Calibrate, detect, align</h2>
+    <p>Getting trustworthy poses is a discipline, not a one-liner. The order matters because every later step assumes the earlier ones are correct:</p>
+    <ul class="learn">
+      <li><b>Calibrate on the rectified feed:</b> the camera matrix must come from the same image the detector actually sees, or the poses drift.</li>
+      <li><b>Restrict the markers:</b> only an allow-list of marker IDs and a known physical size are accepted, which kills false detections.</li>
+      <li><b>Publish to TF:</b> every pose goes onto the transform tree, so position is always expressed relative to a named frame.</li>
+      <li><b>Measure the offset:</b> the camera-to-tracker transform comes from real measured distances from the tracker's origin.</li>
+    </ul>
+    <p class="muted" style="margin-top:18px">In my rebuild I treated calibration as the foundation — a beautiful detector on a badly calibrated camera just produces confident, wrong numbers.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Reflection</p>
+    <h2>What rebuilding it taught me</h2>
+    <ul class="learn">
+      <li><b>Calibration is the whole ballgame.</b> Pose accuracy lives or dies on the camera matrix and distortion model — the clever detection is the easy part.</li>
+      <li><b>Fiducials are an honest shortcut.</b> A known pattern at a known size lets one frame yield a full 3D pose; no deep learning required.</li>
+      <li><b>Coordinate frames are a contract.</b> The transform tree forces you to say <i>relative to what</i>, which is exactly the discipline that lets two sensing systems agree.</li>
+      <li><b>Alignment is measurement, not code.</b> The hardest accuracy gains came from carefully measuring the real offset to the tracker's origin, not from the software.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="credit">
+      <div class="k">About this build</div>
+      <p style="margin:0">An original, from-scratch build by <b>Andrea</b> — written to learn how fiducial detection, camera calibration and coordinate-frame alignment let separate vision and tracking systems share one map of the world. Plain HTML/CSS, deployed on GitHub Pages.</p>
+    </div>
+    <p class="fine">Built from scratch by Andrea · one of an ongoing series of learning builds.</p>
+  </div>
+</footer>
+</body>
+</html>
